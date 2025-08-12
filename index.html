@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Links Web</title>
+    <style>
+        body { font-family: sans-serif; display: flex; }
+        #main-canvas { border: 1px solid black; }
+        #ui-container { display: flex; flex-direction: column; padding: 10px; }
+        #menu-bar { margin-bottom: 10px; }
+        #param-panel { border: 1px solid #ccc; padding: 5px; }
+        .param-item { margin-bottom: 5px; }
+        label { display: inline-block; width: 150px; }
+    </style>
+</head>
+<body>
+    <div>
+        <canvas id="main-canvas" width="800" height="600"></canvas>
+    </div>
+    <div id="ui-container">
+        <div id="menu-bar">
+            <!-- Icons will be added here by ui.js -->
+        </div>
+        <div id="param-panel">
+            <!-- Parameter controls will be added here by ui.js -->
+        </div>
+        <div id="file-io">
+            <p>ファイルを開く: <input type="file" id="file-input"></p>
+        </div>
+        <div id="help-text-container" style="margin-top: 20px; font-size: 0.9em; color: #555;">
+        </div>
+    </div>
+
+    <script src="datatypes.js"></script>
+    <script src="dxf_parser.js"></script>
+    <script src="graphics.js"></script>
+    <script src="simulation.js"></script>
+    <script src="ui.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
