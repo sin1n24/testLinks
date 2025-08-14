@@ -33,6 +33,23 @@ class UI {
         this.fileIoContainer.appendChild(saveButton);
     }
 
+    setupDxfFileHandlers(loadFileCallback) {
+        const inputs = document.querySelectorAll('.dxf-input');
+        inputs.forEach(input => {
+            input.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const part = input.getAttribute('data-part');
+                    loadFileCallback(part, e.target.result);
+                };
+                reader.readAsText(file);
+            });
+        });
+    }
+
     defineControls() {
         // Based on the enums and initInterface in hecken.h
         this.menuButtons = [
@@ -106,6 +123,7 @@ class UI {
                 const val = parseFloat(slider.value);
                 p.obj[p.prop] = val;
                 valueSpan.innerText = val.toFixed(p.step < 1 ? 2 : 0);
+                this.sim.rebirth = true;
             });
 
             const activateEdit = () => {
@@ -124,6 +142,7 @@ class UI {
                         p.obj[p.prop] = val;
                         slider.value = val;
                         valueSpan.innerText = val.toFixed(p.step < 1 ? 2 : 0);
+                        this.sim.rebirth = true;
                     }
                     container.removeChild(input);
                     valueSpan.style.display = 'inline-block';

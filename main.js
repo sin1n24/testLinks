@@ -34,6 +34,17 @@ window.onload = () => {
 
     ui.setupFileHandlers(loadFile, saveFile);
 
+    const dxfParser = new DxfParser();
+    ui.setupFileHandlers(loadFile, saveFile);
+
+    const loadDxfFile = (part, content) => {
+        console.log(`Loading DXF for part: ${part}`);
+        const geometry = dxfParser.parse(content);
+        simulation.loadDxf(part, geometry);
+    };
+
+    ui.setupDxfFileHandlers(loadDxfFile);
+
     // Main loop
     function gameLoop(timestamp) {
         graphics.updateMouseState(); // Reset one-frame mouse flags

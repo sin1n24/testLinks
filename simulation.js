@@ -96,6 +96,9 @@ class Hecken {
 
         this.orbit = createArray(1000, () => new Point());
         this.optimized = createArray(1000, () => new Point());
+        this.cranked = createArray(1000, () => new Point());
+        this.levered = createArray(1000, () => new Point());
+        this.conroded = createArray(1000, () => new Point());
 
         this.updown = 0;
         this.scale = 3;
@@ -146,6 +149,13 @@ class Hecken {
 
         this.drawOnce(g, true); // Draw background elements
 
+        if (this.rebirth) {
+            this.trace();
+            // In C++, sander() and sim() are also called here.
+            // We can add them later if needed for full functionality.
+            this.rebirth = false;
+        }
+
         for (let i = 0; i < this.object; i++) {
             this.get(this.theta + i * 360 / this.object);
             // Color calculation is complex, use a placeholder
@@ -166,21 +176,22 @@ class Hecken {
         const diy = this.crankjoint.y - this.lever.y;
         const part = Math.hypot(dix, diy);
 
-        if (this.leverr === 0 || this.mode === HeckenMode.MSLIDER) {
+        if (this.leverr < 1) { // Slider mode
             if (part === 0) part = 1;
             this.leverjoint.x = this.crankjoint.x - this.conrod * dix / part;
             this.leverjoint.y = this.crankjoint.y - this.conrod * diy / part;
             this.lock = false;
-        } else {
-            // This is the 4-bar linkage (Hecken mode) calculation
+        } else { // 4-bar linkage (Hecken) mode
             if (part === 0 || this.conrod === 0) {
                 this.lock = true;
                 return;
             }
+
             const cosI = dix / part;
             const sinI = (this.side ? 1 : -1) * diy / part;
 
-            const cosO_arg = (part**2 + this.conrod**2 - this.leverr**2) / (2 * this.conrod * part);
+            // Correct implementation from C++ hecken::get
+            const cosO_arg = (this.leverr**2 - this.conrod**2 - part**2) / (-2 * this.conrod * part);
 
             if (Math.abs(cosO_arg) > 1) {
                 this.lock = true;
@@ -189,11 +200,8 @@ class Hecken {
                 const cosO = cosO_arg;
                 const sinO = Math.sqrt(1.0 - cosO**2);
 
-                const new_dx = (cosO * cosI - sinO * sinI) * this.conrod;
-                const new_dy = (sinO * cosI + cosO * sinI) * this.conrod;
-
-                this.leverjoint.x = this.crankjoint.x - new_dx;
-                this.leverjoint.y = this.crankjoint.y - ((this.side ? 1 : -1) * new_dy);
+                this.leverjoint.x = this.crankjoint.x - (cosO * cosI + sinO * sinI) * this.conrod;
+                this.leverjoint.y = this.crankjoint.y + (this.side ? 1 : -1) * (sinO * cosI - cosO * sinI) * this.conrod;
             }
         }
 
@@ -212,13 +220,33 @@ class Hecken {
 
     // Drawing the mechanism
     draw(g, color, gray) {
-        g.line(this.crank, this.crankjoint, gray);
+        // Draw Crank
+        if (this.dxfcrank) {
+            this.grounding(this.crank, this.crankjoint, this.crankraw, this.cranked);
+            g.pline(this.cranked, gray);
+        } else {
+            g.line(this.crank, this.crankjoint, gray);
+        }
+
         if (this.lock) return;
 
-        // Draw the linkage itself
-        g.line(this.leverjoint, this.crankjoint, color);
+        // Draw Conrod/Leg
+        if (this.dxfconrod) {
+             this.grounding(this.crankjoint, this.leverjoint, this.conrodraw, this.conroded);
+             g.pline(this.conroded, gray);
+        } else {
+            g.line(this.leverjoint, this.crankjoint, color);
+        }
+
+        // Draw Lever
+        if (this.dxflever) {
+            this.grounding(this.lever, this.leverjoint, this.leverraw, this.levered);
+            g.pline(this.levered, gray);
+        } else {
+             if (this.leverr !== 0) g.line(this.lever, this.leverjoint, gray);
+        }
+
         g.line(this.crankjoint, this.toe, color);
-        if (this.leverr !== 0) g.line(this.lever, this.leverjoint, gray);
 
         // Draw the optimized leg shape
         if (!this.dxf) {
@@ -396,5 +424,28 @@ class Hecken {
             // ... and so on for all parameters
         ];
         return lines.join('\n') + '\neof';
+    }
+
+    loadDxf(part, geometry) {
+        if (!geometry || !geometry.points) return;
+
+        switch (part) {
+            case 'crank':
+                this.crankraw = geometry.points;
+                // this.cranken = geometry.circles; // Circles not fully handled yet
+                this.dxfcrank = true;
+                break;
+            case 'lever':
+                this.leverraw = geometry.points;
+                this.dxflever = true;
+                break;
+            case 'leg':
+                // In the original, the 'leg' could be the conrod or the optimized shape
+                this.conrodraw = geometry.points;
+                this.dxfconrod = true;
+                break;
+        }
+        this.dxf = true; // Go into DXF display mode
+        this.rebirth = true;
     }
 }
