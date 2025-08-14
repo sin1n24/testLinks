@@ -1,9 +1,10 @@
 // Links Web - UI Management
 
 class UI {
-    constructor(simulation, graphics) {
+    constructor(simulation, graphics, callbacks) {
         this.sim = simulation;
         this.graphics = graphics;
+        this.callbacks = callbacks;
         this.paramPanel = document.getElementById('param-panel');
         this.menuBar = document.getElementById('menu-bar');
         this.fileIoContainer = document.getElementById('file-io');
@@ -14,7 +15,7 @@ class UI {
         this.createControls();
     }
 
-    setupFileHandlers(loadFileCallback, saveFileCallback) {
+    setupFileHandlers(loadFileCallback) {
         const fileInput = document.getElementById('file-input');
         fileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -26,11 +27,6 @@ class UI {
             };
             reader.readAsText(file);
         });
-
-        const saveButton = document.createElement('button');
-        saveButton.innerText = 'Save .links';
-        saveButton.addEventListener('click', saveFileCallback);
-        this.fileIoContainer.appendChild(saveButton);
     }
 
     setupDxfFileHandlers(loadFileCallback) {
@@ -57,6 +53,7 @@ class UI {
             { id: 'mturn', text: 'Reverse', toggle: true },
             { id: 'mside', text: 'Switch Side', toggle: false, action: 'switchSide' },
             { id: 'runOptimization', text: 'Optimize', toggle: false, action: 'runOptimization' },
+            { id: 'save', text: 'Save', toggle: false, action: 'saveFile' },
         ];
 
         this.paramSliders = [
@@ -91,8 +88,11 @@ class UI {
                 if (b.toggle) {
                     this.sim.menu[b.id].value = !this.sim.menu[b.id].value;
                     button.classList.toggle('active');
-                } else if (b.action && typeof this.sim[b.action] === 'function') {
-                    this.sim[b.action]();
+                } else if (b.action) {
+                    const actionFunc = this.sim[b.action] || this.callbacks[b.action];
+                    if (typeof actionFunc === 'function') {
+                        actionFunc.call(this.sim); // Ensure 'this' context is correct if needed
+                    }
                 }
             });
             this.menuBar.appendChild(button);

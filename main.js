@@ -13,12 +13,9 @@ window.onload = () => {
     // Initialize components
     const graphics = new Graphics(canvas);
     const simulation = new Hecken();
-    const ui = new UI(simulation, graphics);
 
     // --- File I/O Handlers ---
     const loadFile = (content) => {
-        // Here you would check if it's a .links or .dxf file
-        // For now, assume .links
         simulation.open(content);
     };
 
@@ -32,17 +29,15 @@ window.onload = () => {
         URL.revokeObjectURL(a.href);
     };
 
-    ui.setupFileHandlers(loadFile, saveFile);
-
     const dxfParser = new DxfParser();
-    ui.setupFileHandlers(loadFile, saveFile);
-
     const loadDxfFile = (part, content) => {
         console.log(`Loading DXF for part: ${part}`);
         const geometry = dxfParser.parse(content);
         simulation.loadDxf(part, geometry);
     };
 
+    const ui = new UI(simulation, graphics, { saveFile: saveFile });
+    ui.setupFileHandlers(loadFile);
     ui.setupDxfFileHandlers(loadDxfFile);
 
     // Main loop
