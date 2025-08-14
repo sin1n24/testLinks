@@ -134,9 +134,14 @@ class Hecken {
     proceed(g) {
         g.clear();
 
-        // This is a simplified placeholder for the full proceed logic
+        // Let UI state control simulation properties
+        this.turn = this.menu.mturn.value;
+
         if (this.menu.mstop.value) { // 'next' in C++
-            this.theta = (this.theta + (this.turn ? 1 : -1) * 360 / this.resol) % 360;
+            // The '60' is a framerate assumption (60fps), roll is in RPM.
+            // This makes the speed roughly correct if the animation runs at 60fps.
+            const speedFactor = (this.roll / 60) * (360 / 60);
+            this.theta = (this.theta + (this.turn ? 1 : -1) * speedFactor) % 360;
         }
 
         this.drawOnce(g, true); // Draw background elements
@@ -162,35 +167,63 @@ class Hecken {
         const part = Math.hypot(dix, diy);
 
         if (this.leverr === 0 || this.mode === HeckenMode.MSLIDER) {
+            if (part === 0) part = 1;
             this.leverjoint.x = this.crankjoint.x - this.conrod * dix / part;
             this.leverjoint.y = this.crankjoint.y - this.conrod * diy / part;
             this.lock = false;
         } else {
+            // This is the 4-bar linkage (Hecken mode) calculation
+            if (part === 0 || this.conrod === 0) {
+                this.lock = true;
+                return;
+            }
             const cosI = dix / part;
             const sinI = (this.side ? 1 : -1) * diy / part;
 
-            let cosO_arg = (this.leverr**2 - this.conrod**2 - part**2) / (-2 * this.conrod * part);
-            if (cosO_arg > 1) cosO_arg = 1;
-            if (cosO_arg < -1) cosO_arg = -1;
+            const cosO_arg = (part**2 + this.conrod**2 - this.leverr**2) / (2 * this.conrod * part);
 
-            const cosO = cosO_arg;
-            const sinO = Math.sqrt(1.0 - cosO**2);
-            this.lock = Math.abs(cosO_arg) > 1;
+            if (Math.abs(cosO_arg) > 1) {
+                this.lock = true;
+            } else {
+                this.lock = false;
+                const cosO = cosO_arg;
+                const sinO = Math.sqrt(1.0 - cosO**2);
 
-            this.leverjoint.x = this.crankjoint.x - (cosO * cosI + sinO * sinI) * this.conrod;
-            this.leverjoint.y = this.crankjoint.y + (this.side ? 1 : -1) * (sinO * cosI - cosO * sinI) * this.conrod;
+                const new_dx = (cosO * cosI - sinO * sinI) * this.conrod;
+                const new_dy = (sinO * cosI + cosO * sinI) * this.conrod;
+
+                this.leverjoint.x = this.crankjoint.x - new_dx;
+                this.leverjoint.y = this.crankjoint.y - ((this.side ? 1 : -1) * new_dy);
+            }
         }
 
         this.toe = this.crankjoint.offset(this.leverjoint, this.shift);
+
+        // After calculating the main points, do the 'grounding' step
+        // which processes the raw optimization data into the final 'optimized' path
+        if (!this.dxf) {
+            if (this.mode === HeckenMode.MDUALSLIDER) {
+                // Not implemented
+            } else {
+                this.optmax = this.grounding(this.crankjoint, this.leverjoint, this.optimizraw, this.optimized, groundlock);
+            }
+        }
     }
 
     // Drawing the mechanism
     draw(g, color, gray) {
         g.line(this.crank, this.crankjoint, gray);
         if (this.lock) return;
+
+        // Draw the linkage itself
         g.line(this.leverjoint, this.crankjoint, color);
         g.line(this.crankjoint, this.toe, color);
         if (this.leverr !== 0) g.line(this.lever, this.leverjoint, gray);
+
+        // Draw the optimized leg shape
+        if (!this.dxf) {
+            g.pline(this.optimized, color);
+        }
     }
 
     // Drawing guide lines, etc.
@@ -223,6 +256,82 @@ class Hecken {
     // Placeholder for simulation analysis
     sim() {
         // TODO: Implement logic from hecken::sim
+    }
+
+    // From hecken::grounding
+    grounding(datam, sub, raw, ed, groundlock) {
+        const dist = datam.dist(sub);
+        let i = 0;
+        for (i = 0; i < raw.length -1; i++) {
+            ed[i] = datam.offset(sub, raw[i]);
+            ed[i].heel = raw[i].heel;
+
+            if (this.ground.y < ed[i].y && !this.lock && !groundlock) {
+                this.ground = ed[i].clone();
+            }
+            if (raw[i].equals(raw[i+1])) {
+                ed[i+1] = ed[i].clone();
+                break;
+            }
+        }
+        return i;
+    }
+
+    runOptimization() {
+        console.log("Running optimization...");
+        this.sander(this.optimizraw);
+        this.dxf = false; // Switch to optimized view
+        this.rebirth = true;
+        console.log("Optimization complete.");
+    }
+
+    switchSide() {
+        this.side = !this.side;
+        this.rebirth = true;
+    }
+
+    // From hecken::sander
+    sander(raw) {
+        const POINT_LIM = 1000;
+        let len = new Array(POINT_LIM).fill(10000);
+        raw.forEach(p => { p.x = p.y = 10000; });
+
+        const dualmode = (this.mode === HeckenMode.MDUALSLIDER || this.mode === HeckenMode.MDUALHECKEN);
+
+        for (let i = 0; i <= this.resol; i++) {
+            this.get(this.theta + i * 360 / this.resol, true);
+
+            const temp_leverjoint = dualmode ? this.subleverjoint : this.leverjoint;
+            const temp_crankjoint = dualmode ? this.toe : this.crankjoint;
+            const temp_conrod = dualmode ? this.subconrod : this.conrod;
+
+            const slope = temp_leverjoint.__dir(temp_crankjoint);
+
+            let leg_cnt = 0;
+            const mini_rad = this.rad(this.mini);
+            const max_rad = this.rad(this.max);
+            const step_rad = this.rad(this.step);
+
+            for (let line_ang = slope + Math.PI * 0.5 + mini_rad; line_ang <= slope + Math.PI * 1.5 - max_rad; line_ang += step_rad) {
+                if (leg_cnt >= POINT_LIM) break;
+
+                const sin_line_ang = Math.sin(line_ang);
+                if (Math.abs(sin_line_ang) < 1e-9) continue;
+
+                let length = (this.crank.y + this.height - temp_leverjoint.y) / sin_line_ang;
+
+                if (length < len[leg_cnt] && length > 0) {
+                    len[leg_cnt] = length;
+                    const result_point = sincos(line_ang - slope - Math.PI / 2).multiply(length);
+                    raw[leg_cnt] = result_point.subtract(new Point(0, temp_conrod));
+                }
+                raw[leg_cnt].heel = true;
+                leg_cnt++;
+            }
+            if (leg_cnt > 0 && leg_cnt < POINT_LIM) {
+                 raw[leg_cnt] = raw[leg_cnt - 1].clone();
+            }
+        }
     }
 
     // Load parameters from a .links file content
