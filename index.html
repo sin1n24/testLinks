@@ -15,8 +15,13 @@
     </style>
 </head>
 <body>
-    <div>
+    <div>        
         <canvas id="main-canvas" width="800" height="600"></canvas>
+        <div id="help-text-container" style="margin-top: 20px; font-size: 0.9em; color: #555;">
+            <p>※本ウェブアプリは開発中のβ版につき、一部機能が未実装や不安定です。</br>
+                全ての機能を使いたい場合はWin版をご利用頂き、使い方についても<a href="../Links.html">Win版の取説</a>をご覧下さい。</br>
+                なおWin版の開発は停止しており今後追加機能実装の予定はありません。</p>
+        </div>
     </div>
     <div id="ui-container">
         <div id="menu-bar">
@@ -33,13 +38,8 @@
             <p>Load Lever DXF: <input type="file" id="dxf-lever-input" class="dxf-input" data-part="lever"></p>
             <p>Load Leg DXF: <input type="file" id="dxf-leg-input" class="dxf-input" data-part="leg"></p>
         </div>
-        <div id="help-text-container" style="margin-top: 20px; font-size: 0.9em; color: #555;">
-            <p>※本ウェブアプリは開発中のβ版につき、一部機能が未実装や不安定です。
-                全ての機能を使いたい場合はWin版をご利用頂き、使い方についてもWin版の取説をご覧下さい。
-                なおWin版の開発は停止しており今後追加機能実装の予定はありません。</p>
-        </div>
     </div>
-
+    
     <script src="datatypes.js"></script>
     <script src="dxf_parser.js"></script>
     <script src="graphics.js"></script>
