@@ -4,23 +4,50 @@
     <meta charset="UTF-8">
     <title>Links Web β</title>
     <style>
-        body { font-family: sans-serif; display: flex; }
-        #main-canvas { border: 1px solid black; }
-        #ui-container { display: flex; flex-direction: column; padding: 10px; }
+        body { font-family: sans-serif; display: flex; flex-wrap: wrap; justify-content: center; }
+        #main-canvas { border: 1px solid black; max-width: 100%; height: auto; }
+        #ui-container { display: flex; flex-direction: column; padding: 10px; min-width: 300px; }
         #menu-bar { margin-bottom: 10px; }
         #menu-bar button { margin-right: 5px; }
         #param-panel { border: 1px solid #ccc; padding: 5px; margin-top: 10px; }
         .param-item { margin-bottom: 5px; }
         label { display: inline-block; width: 150px; }
+        #log-container {
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin: 10px 0;
+            height: 100px; /* Approx 5 lines */
+            overflow-y: scroll;
+            background-color: #f9f9f9;
+            font-size: 0.9em;
+        }
+        /* Responsive Layout */
+        @media (max-width: 1150px) {
+            body {
+                flex-direction: column;
+                align-items: center;
+            }
+            #ui-container {
+                order: 3; /* Ensure it comes after main-column */
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 100%;
+                max-width: 800px; /* Match canvas width for alignment */
+            }
+            #main-column {
+                order: 2;
+                width: 100%;
+                max-width: 800px; /* Match canvas width */
+            }
+        }
     </style>
 </head>
 <body>
-    <div>        
+    <div id="main-column">
         <canvas id="main-canvas" width="800" height="600"></canvas>
-        <div id="help-text-container" style="margin-top: 20px; font-size: 0.9em; color: #555;">
-            <p>※本ウェブアプリは開発中のβ版につき、一部機能が未実装や不安定です。</br>
-                全ての機能を使いたい場合はWin版をご利用頂き、使い方についても<a href="../Links.html">Win版の取説</a>をご覧下さい。</br>
-                なおWin版の開発は停止しており今後追加機能実装の予定はありません。</p>
+        <div id="log-container">
+            <!-- Log messages will be added here -->
         </div>
     </div>
     <div id="ui-container">

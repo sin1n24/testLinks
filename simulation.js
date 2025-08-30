@@ -16,6 +16,7 @@ const HeckenMode = {
 
 class Hecken {
     constructor() {
+        this.logger = () => {}; // Dummy logger, does nothing
         this.init();
 
         // These would be initialized after loading a file, etc.
@@ -30,6 +31,10 @@ class Hecken {
         // this.sander(this.optimizraw); // Complex function, placeholder
         this.trace();
         this.sim();
+    }
+
+    setLogger(loggerFunc) {
+        this.logger = loggerFunc;
     }
 
     init() {
@@ -306,11 +311,11 @@ class Hecken {
     }
 
     runOptimization() {
-        console.log("Running optimization...");
+        this.logger("Running optimization...");
         this.sander(this.optimizraw);
         this.dxf = false; // Switch to optimized view
         this.rebirth = true;
-        console.log("Optimization complete.");
+        this.logger("Optimization complete.");
     }
 
     switchSide() {
@@ -393,7 +398,7 @@ class Hecken {
 
         // ... and so on for all parameters
 
-        console.log("Loaded parameters from file.");
+        this.logger("Loaded parameters from file.");
         this.rebirth = true; // Trigger a recalculation
         this.trace();
         this.sim();
