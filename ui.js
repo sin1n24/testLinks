@@ -175,7 +175,7 @@ class UI {
         if (!this.logContainer) return;
 
         const p = document.createElement('p');
-        p.innerText = message;
+        p.innerHTML = message; // Use innerHTML to support links etc.
         p.style.margin = '2px 0'; // Compact spacing
         p.style.wordBreak = 'break-word'; // Wrap long messages
 
