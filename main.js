@@ -1,8 +1,6 @@
 // Links Web - Main Entry Point
 
 window.onload = () => {
-    console.log("Links Web application started.");
-
     // Get canvas and context
     const canvas = document.getElementById('main-canvas');
     if (!canvas) {
@@ -31,7 +29,7 @@ window.onload = () => {
 
     const dxfParser = new DxfParser();
     const loadDxfFile = (part, content) => {
-        console.log(`Loading DXF for part: ${part}`);
+        logMessage(`Loading DXF for part: ${part}`);
         const geometry = dxfParser.parse(content);
         simulation.loadDxf(part, geometry);
     };
@@ -39,6 +37,17 @@ window.onload = () => {
     const ui = new UI(simulation, graphics, { saveFile: saveFile });
     ui.setupFileHandlers(loadFile);
     ui.setupDxfFileHandlers(loadDxfFile);
+
+    // --- Logging ---
+    const logMessage = (message) => {
+        ui.addLogMessage(message);
+        console.log(message); // Also keep logging to console for debugging
+    };
+
+    simulation.setLogger(logMessage);
+
+    logMessage("Links Web application started.");
+
 
     // Main loop
     function gameLoop(timestamp) {

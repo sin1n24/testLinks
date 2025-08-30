@@ -9,6 +9,7 @@ class UI {
         this.menuBar = document.getElementById('menu-bar');
         this.fileIoContainer = document.getElementById('file-io');
         this.helpText = document.getElementById('help-text-container');
+        this.logContainer = document.getElementById('log-container'); // Get the log container
         this.controls = {}; // To store references to the input elements
 
         this.defineControls();
@@ -168,6 +169,26 @@ class UI {
 
             this.controls[p.id] = { slider, valueSpan };
         });
+    }
+
+    addLogMessage(message) {
+        if (!this.logContainer) return;
+
+        const p = document.createElement('p');
+        p.innerText = message;
+        p.style.margin = '2px 0'; // Compact spacing
+        p.style.wordBreak = 'break-word'; // Wrap long messages
+
+        this.logContainer.appendChild(p);
+
+        // Auto-scroll to the bottom
+        this.logContainer.scrollTop = this.logContainer.scrollHeight;
+
+        // Optional: Limit the number of log entries to prevent performance issues
+        const maxLogEntries = 100;
+        if (this.logContainer.children.length > maxLogEntries) {
+            this.logContainer.removeChild(this.logContainer.firstChild);
+        }
     }
 
     update() {

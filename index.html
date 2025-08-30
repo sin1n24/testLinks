@@ -12,6 +12,15 @@
         #param-panel { border: 1px solid #ccc; padding: 5px; margin-top: 10px; }
         .param-item { margin-bottom: 5px; }
         label { display: inline-block; width: 150px; }
+        #log-container {
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin-top: 10px;
+            height: 100px; /* Approx 5 lines */
+            overflow-y: scroll;
+            background-color: #f9f9f9;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -37,6 +46,9 @@
             <p>Load Crank DXF: <input type="file" id="dxf-crank-input" class="dxf-input" data-part="crank"></p>
             <p>Load Lever DXF: <input type="file" id="dxf-lever-input" class="dxf-input" data-part="lever"></p>
             <p>Load Leg DXF: <input type="file" id="dxf-leg-input" class="dxf-input" data-part="leg"></p>
+        </div>
+        <div id="log-container">
+            <!-- Log messages will be added here -->
         </div>
     </div>
     
