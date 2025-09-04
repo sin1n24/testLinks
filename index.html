@@ -11,8 +11,10 @@
         #menu-bar { margin-bottom: 10px; }
         #menu-bar button { margin-right: 5px; }
         #param-panel { border: 1px solid #ccc; padding: 5px; margin-top: 10px; }
-        .param-item { margin-bottom: 5px; }
-        label { display: inline-block; width: 150px; }
+        .param-item { display: flex; align-items: center; margin-bottom: 5px; }
+        .param-item label { width: 150px; flex-shrink: 0; }
+        .param-item input[type=range] { flex-grow: 1; margin: 0 5px; }
+        label { display: inline-block; } /* Keep this for other labels if any */
         #log-container {
             border: 1px solid #ccc;
             padding: 5px;
@@ -40,6 +42,9 @@
                 order: 2;
                 width: 100%;
                 max-width: 800px; /* Match canvas width */
+            }
+            .param-item label {
+                width: 110px; /* Shorten label on narrow screens */
             }
         }
     </style>
