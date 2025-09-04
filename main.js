@@ -64,14 +64,4 @@ window.onload = () => {
 
     // Start the loop
     requestAnimationFrame(gameLoop);
-
-    // --- Debug Size Display ---
-    const sizeDisplay = document.getElementById('debug-size-display');
-    if (sizeDisplay) {
-        const updateSizeDisplay = () => {
-            sizeDisplay.textContent = `w: ${window.innerWidth}px / h: ${window.innerHeight}px`;
-        };
-        window.addEventListener('resize', updateSizeDisplay);
-        updateSizeDisplay(); // Initial call
-    }
 };
